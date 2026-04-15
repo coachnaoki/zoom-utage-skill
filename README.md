@@ -1,14 +1,14 @@
 # zoom-utage-skill
 
-Zoom録画 → UTage会員サイトのレッスンページを1コマンドで自動作成するスキル。
+Zoom録画 → UTAGE会員サイトのレッスンページを1コマンドで自動作成するスキル。
 
 - Zoom API で直近の録画を取得（MP4+VTT）
-- UTage に動画アップロード
+- UTAGE に動画アップロード
 - 空レッスンを新規作成
 - Gemini がタイトル・扱った内容・チャプターを生成
 - チャプタークリックで動画が該当位置にジャンプするレッスンページを自動構築
 
-> ⚠️ UTage 非公式の自動化ツールです。Playwright で UTage エディタをブラウザ操作しています。利用は自己責任でお願いします。
+> ⚠️ UTAGE 非公式の自動化ツールです。Playwright で UTAGE エディタをブラウザ操作しています。利用は自己責任でお願いします。
 
 ## 3ステップセットアップ
 
@@ -37,7 +37,7 @@ Claude Code に次のように話しかける:
 
 - **Zoom API**（Server-to-Server OAuth）: `docs/01-zoom-api.md`
 - **Gemini API**（Google AI Studio）: `docs/02-gemini-api.md`
-- **UTage オペレーターアカウント**（サブ運営用）: `docs/03-utage-operator.md`
+- **UTAGE オペレーターアカウント**（サブ運営用）: `docs/03-utage-operator.md`
 
 ### 4. ターゲット層に合わせて色・文体を調整（任意）
 
@@ -78,10 +78,12 @@ Zoom API モード（直近の録画を自動取得）:
 └── docs/
     ├── 01-zoom-api.md          # Zoom Server-to-Server OAuth 取得手順
     ├── 02-gemini-api.md        # Gemini API Key 取得手順
-    ├── 03-utage-operator.md    # UTage オペレーター設定手順
+    ├── 03-utage-operator.md    # UTAGE オペレーター設定手順
     └── 04-customize-design.md  # デザイン/文体のカスタマイズ方法
 ```
 
 ## ライセンス
 
-MIT
+Copyright © 2026 Naoki Kobayashi. All rights reserved.
+
+本スキルの著作権は Naoki に帰属します。個人利用は自由ですが、再配布・販売・二次配布用パブリックリポジトリへのアップロードは禁じます。詳細は `LICENSE` を参照してください。

@@ -13,7 +13,7 @@
 1. [Zoom App Marketplace](https://marketplace.zoom.us/) にログイン
 2. 右上の **Develop** → **Build App**
 3. アプリタイプは **Server-to-Server OAuth** を選択
-4. アプリ名を入力（例: `UTage Auto Import`）→ Create
+4. アプリ名を入力（例: `UTAGE Auto Import`）→ Create
 5. 「Information」タブで会社名・アプリ連絡先などを埋める
 
 ### Scopes（権限）
