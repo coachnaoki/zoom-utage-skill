@@ -37,7 +37,7 @@ ZOOM_ACCOUNT_ID = os.environ.get('ZOOM_ACCOUNT_ID', '')
 ZOOM_CLIENT_ID = os.environ.get('ZOOM_CLIENT_ID', '')
 ZOOM_CLIENT_SECRET = os.environ.get('ZOOM_CLIENT_SECRET', '')
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
-GEMINI_MODEL = 'gemini-3.1-flash-lite'
+GEMINI_MODEL = 'gemini-3.1-flash-lite-preview'
 
 
 # ========================================================================
