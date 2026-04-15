@@ -23,7 +23,7 @@ import os, requests
 from dotenv import load_dotenv
 load_dotenv()
 r = requests.post(
-    f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={os.environ[\"GEMINI_API_KEY\"]}',
+    f'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key={os.environ[\"GEMINI_API_KEY\"]}',
     json={'contents':[{'parts':[{'text':'hello'}]}]})
 print(r.status_code, r.json().get('candidates', [{}])[0])
 "
@@ -33,7 +33,7 @@ print(r.status_code, r.json().get('candidates', [{}])[0])
 
 ## モデルとコスト
 
-このスキルは `gemini-2.5-flash` を使っている。
+このスキルは `gemini-3.1-flash-lite` を使っている。
 
 - 1本のレッスン作成で `gen_title` `gen_contents_list` `gen_chapters` の3回呼び出し
 - トークン消費は文字起こし量次第。2時間のセミナー（VTT 50KB 程度）で概ね月額 $0.1 〜 $0.5 程度に収まる規模

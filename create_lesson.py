@@ -1,5 +1,5 @@
 """
-Zoom録画(VTT+MP4) → UTage会員サイトのレッスンページを自動作成。
+Zoom録画(VTT+MP4) → UTAGE会員サイトのレッスンページを自動作成。
 
 配布版：回次採番なし、URL類はすべて CLI 引数から渡す。
 
@@ -37,7 +37,7 @@ ZOOM_ACCOUNT_ID = os.environ.get('ZOOM_ACCOUNT_ID', '')
 ZOOM_CLIENT_ID = os.environ.get('ZOOM_CLIENT_ID', '')
 ZOOM_CLIENT_SECRET = os.environ.get('ZOOM_CLIENT_SECRET', '')
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
-GEMINI_MODEL = 'gemini-2.5-flash'
+GEMINI_MODEL = 'gemini-3.1-flash-lite'
 
 
 # ========================================================================
@@ -273,7 +273,7 @@ def find_media(vtt_path):
     raise SystemExit(f'video file not found next to VTT: {vtt.parent}')
 
 
-# ---------- UTage Playwright ----------
+# ---------- UTAGE Playwright ----------
 def _login(ctx, login_url):
     page = ctx.new_page()
     page.goto(login_url, wait_until='networkidle')
@@ -551,7 +551,7 @@ def main():
     g.add_argument('--vtt', help='ローカルの .transcript.vtt パス')
     g.add_argument('--zoom', action='store_true', help='Zoom APIから直近の録画を取得')
     ap.add_argument('--zoom-days', type=int, default=7)
-    ap.add_argument('--login-url', required=True, help='UTage オペレーターログインURL')
+    ap.add_argument('--login-url', required=True, help='UTAGE オペレーターログインURL')
     ap.add_argument('--course-url', required=True, help='対象コースの URL')
     ap.add_argument('--upload-folder-url', required=True, help='動画アップロード先フォルダの URL')
     ap.add_argument('--slides-url', default=None)
