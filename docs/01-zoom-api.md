@@ -20,9 +20,14 @@
 
 「Scopes」タブで以下を追加:
 
-- `cloud_recording:read:list_user_recordings:admin`
-- `cloud_recording:read:recording:admin`
-- `user:read:user:admin`
+**必須（録画一覧取得・ダウンロード用）**
+- `cloud_recording:read:list_user_recordings:admin`（録画一覧を見る権限）
+- `cloud_recording:read:recording:admin`（録画を取得する権限）
+
+**予備（`me` 解決でエラーが出たら追加）**
+- `user:read:user:admin`（`/users/me` のユーザー解決用）
+
+ほとんどの Zoom アカウントは上の2つだけで動きます。もし実行時に `User does not exist: me` のようなエラーが出たら、3つ目を追加して Activate し直してください。
 
 ### Activation
 
