@@ -586,15 +586,13 @@ def build_rich_elements(lesson_id_int, contents_items, video_url, chapters_text,
             ts, body = parts
             chapter_items.append(
                 f'<div style="display:flex;gap:14px;align-items:baseline;'
-                f'padding:10px 0 10px 14px;'
-                f'border-left:2px solid rgba(30,74,122,0.25);'
+                f'padding:11px 0;border-bottom:1px solid #eef0f3;'
                 f'font-size:15.5px;line-height:1.6;color:{INK};letter-spacing:0.02em;">'
-                f'<span style="flex:0 0 auto;min-width:76px;'
+                f'<span style="flex:0 0 auto;min-width:78px;'
                 f'font-family:\'SF Mono\',Menlo,monospace;font-size:13px;font-weight:700;'
-                f'color:#ffffff;padding:4px 8px;'
-                f'background:{ACCENT};border-radius:4px;letter-spacing:0.02em;'
-                f'text-align:center;'
-                f'box-shadow:0 2px 4px rgba(30,74,122,0.25);">{ts}</span>'
+                f'color:{ACCENT};padding:5px 10px;'
+                f'background:#ffffff;border:1.5px solid {ACCENT};'
+                f'border-radius:4px;letter-spacing:0.02em;text-align:center;">{ts}</span>'
                 f'<span style="flex:1;">{body}</span>'
                 f'</div>'
             )
@@ -603,10 +601,10 @@ def build_rich_elements(lesson_id_int, contents_items, video_url, chapters_text,
                 f'<p style="margin:0 0 10px 0;font-size:16px;line-height:1.8;color:{INK};">{ln}</p>'
             )
     chapter_html = (
-        f'<div style="font-family:{FONT};background:{BG_SOFT};border-radius:12px;'
-        f'padding:24px 22px 22px;margin-top:16px;'
-        f'border-top:3px solid {ACCENT};">'
-        f'<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">'
+        f'<div style="font-family:{FONT};background:#ffffff;border-radius:12px;'
+        f'padding:22px 20px 12px;margin-top:16px;'
+        f'border:1px solid {BORDER};border-top:3px solid {ACCENT};">'
+        f'<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">'
         f'<span style="font-size:14px;font-weight:700;color:{INK};'
         f'letter-spacing:0.05em;">動画チャプター</span>'
         f'<span style="font-size:10px;letter-spacing:0.18em;color:{ACCENT};'
