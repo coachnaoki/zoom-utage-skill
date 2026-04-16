@@ -39,6 +39,32 @@ Claude Code がやってくれること:
 3. `LESSON_CONTEXT` をターゲットに合う文脈に書き換える（例「英語コーチング」「経営者向けマーケティング講座」）
 4. 必要ならフォントチェーンも書き換える
 
+## 参考デザインから選ぶ（提案が気に入らない場合）
+
+Claude Code の提案がしっくりこない場合は、日本語Webサービスのデザイン仕様書集を参考にできる:
+
+📎 awesome-design-md-jp
+https://github.com/kzhrknt/awesome-design-md-jp
+
+24の日本語サービス（note, MUJI, SmartHR, Apple Japan 等）のカラー・フォント・余白が DESIGN.md 形式でまとまっている。
+
+Claude Code にこう頼む:
+
+> CUSTOMIZEセクションのデザインを「noteっぽく」変えたい。
+> awesome-design-md-jp の note/DESIGN.md を参考にして、
+> 配色・フォントを差し替えてください。
+
+使える参考サービスの例:
+
+| サービス | 雰囲気 | 向いてる層 |
+|---|---|---|
+| note | 温かい・読みやすい | ブログ/教育系 |
+| MUJI | 素朴・静謐・余白 | 高品質/ライフスタイル |
+| SmartHR | 親しみ・プロ | BtoB/SaaS |
+| Apple Japan | 洗練・大胆 | ハイエンド |
+| LINE | POP・親しみ | 若年層/カジュアル |
+| Cookpad | 温かい・家庭的 | 食品/暮らし |
+
 ## 手動で触る場合のヒント
 
 ### カラーパレット設計
