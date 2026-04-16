@@ -127,12 +127,15 @@ GEMINI_MODEL = 'gemini-3.1-flash-lite-preview'
 
 # --- デザイントークン ---
 FONT = '"Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic Medium", Meiryo, sans-serif'
-INK = '#0a1a2e'          # 見出し・強調テキスト
-INK2 = '#3a4a5a'         # 本文
-GRAY_TEXT = '#5a656b'    # キャプション・ラベル
-BG_SOFT = '#f5f8fa'      # カード背景（薄色）
-BORDER = '#d4dde3'       # 枠線
-ACCENT = '#1e4a7a'       # ボタン・バッジ・アクセント
+INK = '#0a1a2e'              # 見出し・強調テキスト
+INK2 = '#3a4a5a'             # 本文
+GRAY_TEXT = '#5a656b'        # キャプション・ラベル
+BG_SOFT = '#f5f8fa'          # カード背景（薄色）
+BG_ACCENT = 'rgba(30, 74, 122, 0.10)'  # アクセント薄色（スライド包囲など）
+BORDER = '#d4dde3'           # 枠線
+ACCENT = '#1e4a7a'           # ボタン・バッジ・アクセント
+ACCENT_DARK = '#0a2947'      # グラデーション起点（深いネイビー）
+ACCENT2 = '#2d6ba5'          # 予備（旧バッジ終点）
 
 # --- レッスンの性格（Gemini プロンプトで使う）---
 # 例: 'テニス勉強会' / 'マーケティング実践講座' / '英語コーチング' …
@@ -519,28 +522,46 @@ def build_rich_elements(lesson_id_int, contents_items, video_url, chapters_text,
         eid += 1
         return e
 
-    # 1) 今回扱った内容（番号バッジ付きカード）
+    # セクション見出し用の共通HTML
+    def _sec_heading(num, title):
+        return (
+            f'<div style="display:flex;align-items:center;gap:14px;'
+            f'margin:0 0 22px;font-family:{FONT};">'
+            f'<span style="font-family:\'SF Mono\',Menlo,monospace;font-size:13px;'
+            f'font-weight:700;color:{ACCENT};letter-spacing:0.12em;">{num}</span>'
+            f'<span style="font-size:18px;font-weight:700;color:{INK};'
+            f'letter-spacing:0.05em;">{title}</span>'
+            f'<span style="flex:1;height:1px;background:{BORDER};"></span>'
+            f'</div>'
+        )
+
+    # 1) 今回扱った内容（深いグラデバッジ + 浮遊感カード）
     if contents_items:
         cards = []
         for i, (t, d) in enumerate(contents_items, 1):
             cards.append(
-                f'<div style="display:flex;gap:18px;padding:20px 22px;'
-                f'background:#ffffff;border:1px solid {BORDER};border-radius:8px;'
-                f'margin-bottom:12px;align-items:flex-start;">'
-                f'<div style="flex:0 0 auto;width:36px;height:36px;'
-                f'background:{ACCENT};color:#ffffff;border-radius:50%;'
+                f'<div style="display:flex;gap:20px;padding:22px;'
+                f'background:#ffffff;border:1px solid {BORDER};border-radius:12px;'
+                f'margin-bottom:14px;align-items:flex-start;'
+                f'box-shadow:0 2px 8px rgba(30,74,122,0.06);">'
+                f'<div style="flex:0 0 auto;width:48px;height:48px;'
+                f'background:linear-gradient(135deg,{ACCENT_DARK} 0%,{ACCENT} 100%);'
+                f'color:#ffffff;border-radius:10px;'
                 f'display:flex;align-items:center;justify-content:center;'
-                f'font-weight:700;font-size:16px;font-family:\'SF Mono\',Menlo,monospace;">'
+                f'font-weight:800;font-size:18px;'
+                f'font-family:\'SF Mono\',Menlo,monospace;letter-spacing:0.02em;'
+                f'box-shadow:0 6px 16px rgba(10,41,71,0.35);">'
                 f'{i:02d}</div>'
                 f'<div style="flex:1;">'
-                f'<div style="font-size:18px;font-weight:700;color:{INK};'
-                f'letter-spacing:0.04em;margin-bottom:8px;line-height:1.5;">{t}</div>'
-                f'<div style="font-size:16px;line-height:1.85;letter-spacing:0.04em;'
+                f'<div style="font-size:17px;font-weight:700;color:{INK};'
+                f'letter-spacing:0.03em;margin-bottom:8px;line-height:1.5;">{t}</div>'
+                f'<div style="font-size:15px;line-height:1.85;letter-spacing:0.03em;'
                 f'color:{INK2};">{d}</div>'
                 f'</div></div>'
             )
         section([text_el(
             f'<div style="font-family:{FONT};padding:32px 8px 8px;">'
+            + _sec_heading('01', '今回扱った内容')
             + ''.join(cards) + '</div>'
         )])
 
@@ -564,22 +585,34 @@ def build_rich_elements(lesson_id_int, contents_items, video_url, chapters_text,
         if len(parts) == 2 and re.match(r'^\d{2}:\d{2}:\d{2}$', parts[0]):
             ts, body = parts
             chapter_items.append(
-                f'<p style="margin:0 0 10px 0;font-size:17px;line-height:1.8;'
-                f'color:{INK};letter-spacing:0.03em;">'
-                f'<span style="display:inline-block;min-width:84px;'
-                f'color:{ACCENT};font-weight:700;font-family:\'SF Mono\',Menlo,monospace;">'
-                f'{ts}</span>{body}</p>'
+                f'<div style="display:flex;gap:14px;align-items:baseline;'
+                f'padding:10px 0 10px 14px;'
+                f'border-left:2px solid rgba(30,74,122,0.25);'
+                f'font-size:15.5px;line-height:1.6;color:{INK};letter-spacing:0.02em;">'
+                f'<span style="flex:0 0 auto;min-width:76px;'
+                f'font-family:\'SF Mono\',Menlo,monospace;font-size:13px;font-weight:700;'
+                f'color:#ffffff;padding:4px 8px;'
+                f'background:{ACCENT};border-radius:4px;letter-spacing:0.02em;'
+                f'text-align:center;'
+                f'box-shadow:0 2px 4px rgba(30,74,122,0.25);">{ts}</span>'
+                f'<span style="flex:1;">{body}</span>'
+                f'</div>'
             )
         else:
             chapter_items.append(
-                f'<p style="margin:0 0 10px 0;font-size:17px;line-height:1.8;color:{INK};">{ln}</p>'
+                f'<p style="margin:0 0 10px 0;font-size:16px;line-height:1.8;color:{INK};">{ln}</p>'
             )
     chapter_html = (
-        f'<div style="font-family:{FONT};background:{BG_SOFT};'
-        f'border:1px solid {BORDER};border-radius:8px;'
-        f'padding:24px 28px;margin-top:16px;">'
-        f'<div style="font-size:13px;letter-spacing:0.15em;color:{GRAY_TEXT};'
-        f'font-weight:600;margin-bottom:14px;">CHAPTERS</div>'
+        f'<div style="font-family:{FONT};background:{BG_SOFT};border-radius:12px;'
+        f'padding:24px 22px 22px;margin-top:16px;'
+        f'border-top:3px solid {ACCENT};">'
+        f'<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">'
+        f'<span style="font-size:14px;font-weight:700;color:{INK};'
+        f'letter-spacing:0.05em;">動画チャプター</span>'
+        f'<span style="font-size:10px;letter-spacing:0.18em;color:{ACCENT};'
+        f'font-family:\'SF Mono\',Menlo,monospace;font-weight:700;'
+        f'padding:2px 8px;background:rgba(30,74,122,0.10);border-radius:3px;">CHAPTERS</span>'
+        f'</div>'
         + ''.join(chapter_items) + '</div>'
     )
     chapter_el = {
@@ -590,7 +623,7 @@ def build_rich_elements(lesson_id_int, contents_items, video_url, chapters_text,
     eid += 1
     section([video_el, chapter_el])
 
-    # 3) 資料ボタン
+    # 3) 資料ブロック（タイトル + 説明 + ボタン）
     if slides_url:
         urls = slides_url if isinstance(slides_url, (list, tuple)) else [slides_url]
         urls = [u for u in urls if u]
@@ -604,15 +637,22 @@ def build_rich_elements(lesson_id_int, contents_items, video_url, chapters_text,
                 return '資料を開く'
             btns = ''.join(
                 f'<a href="{u}" target="_blank" rel="noopener" '
-                f'style="display:inline-block;padding:14px 28px;'
+                f'style="display:block;padding:15px 24px;margin-bottom:10px;'
                 f'background:{ACCENT};color:#ffffff;text-decoration:none;'
-                f'border-radius:999px;font-size:16px;font-weight:700;'
-                f'letter-spacing:0.04em;">{_label(u)}</a>'
+                f'border-radius:8px;font-size:15px;font-weight:700;'
+                f'letter-spacing:0.04em;text-align:center;'
+                f'box-shadow:0 6px 18px rgba(30,74,122,0.35);">'
+                f'{_label(u)} →</a>'
                 for u in urls
             )
             section([text_el(
-                f'<div style="font-family:{FONT};padding:24px 8px 8px;'
-                f'display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-start;">'
+                f'<div style="font-family:{FONT};margin-top:24px;padding:22px 20px;'
+                f'background:{BG_ACCENT};border-left:4px solid {ACCENT};'
+                f'border-radius:8px;">'
+                f'<div style="color:{INK};font-size:15px;font-weight:700;'
+                f'letter-spacing:0.04em;margin-bottom:4px;">本日のスライド資料</div>'
+                f'<div style="color:{INK2};font-size:12.5px;letter-spacing:0.06em;'
+                f'margin-bottom:14px;">復習用にダウンロードしてご活用ください</div>'
                 + btns + '</div>'
             )])
 
