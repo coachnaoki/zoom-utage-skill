@@ -235,12 +235,13 @@ def zoom_download(url, token, dest):
     return dest
 
 
-def zoom_pick_latest(days=7):
+def zoom_list_candidates(days=7):
     token = zoom_token()
     meetings = zoom_list_recordings(token, days=days)
     if not meetings:
-        return None
+        return token, []
     meetings.sort(key=lambda m: m.get('start_time', ''), reverse=True)
+    candidates = []
     for mt in meetings:
         mp4 = vtt = None
         for rf in mt.get('recording_files', []):
@@ -250,14 +251,23 @@ def zoom_pick_latest(days=7):
             elif ft == 'TRANSCRIPT' and rf.get('status') == 'completed':
                 vtt = rf
         if mp4 and vtt:
-            return {
-                'token': token,
+            candidates.append({
                 'mp4_url': mp4['download_url'],
                 'vtt_url': vtt['download_url'],
                 'topic': mt.get('topic', 'Zoom Meeting'),
                 'start_time': mt.get('start_time', ''),
-            }
-    return None
+                'duration': mt.get('duration', 0),
+                'size_mb': round(mp4.get('file_size', 0) / 1024 / 1024, 1),
+            })
+    return token, candidates
+
+
+def zoom_pick_latest(days=7):
+    token, cands = zoom_list_candidates(days=days)
+    if not cands:
+        return None
+    c = cands[0]
+    return {'token': token, **c}
 
 
 def find_media(vtt_path):
@@ -575,10 +585,30 @@ def main():
         print(f'[0] Zoom APIから録画取得（直近{args.zoom_days}日）')
         if not all([ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET]):
             raise SystemExit('Zoom認証情報(.env)が未設定')
-        info = zoom_pick_latest(days=args.zoom_days)
-        if not info:
+        token, cands = zoom_list_candidates(days=args.zoom_days)
+        if not cands:
             raise SystemExit(f'直近{args.zoom_days}日にMP4+VTTが揃った録画なし')
-        print(f'    topic: {info["topic"]} / start: {info["start_time"]}')
+        if args.yes or len(cands) == 1:
+            info = {'token': token, **cands[0]}
+            print(f'    自動選択: {info["topic"]} ({info["start_time"]})')
+        else:
+            print(f'    {len(cands)}件の録画が見つかりました:')
+            for i, c in enumerate(cands[:10], 1):
+                print(f'    [{i}] {c["start_time"]} / {c["topic"]} '
+                      f'({c["duration"]}分, {c["size_mb"]}MB)')
+            if len(cands) > 10:
+                print(f'    （残り{len(cands)-10}件は省略。--zoom-days で期間調整可）')
+            while True:
+                ans = input(f'\n番号を入力 [1-{min(len(cands),10)}] (デフォルト: 1): ').strip()
+                if ans == '':
+                    idx = 0
+                    break
+                if ans.isdigit() and 1 <= int(ans) <= min(len(cands), 10):
+                    idx = int(ans) - 1
+                    break
+                print('    無効。もう一度入力してください')
+            info = {'token': token, **cands[idx]}
+            print(f'    選択: {info["topic"]}')
         tmpdir_obj = tempfile.TemporaryDirectory(prefix='zoom_dl_')
         tmpdir = Path(tmpdir_obj.name)
         safe = re.sub(r'[\\/*?:"<>|]', '_', info['topic'])
