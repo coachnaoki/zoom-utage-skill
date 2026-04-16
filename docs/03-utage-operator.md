@@ -34,15 +34,15 @@ UTAGE_EMAIL=<オペレーターのメール>
 UTAGE_PASSWORD=<オペレーターのパスワード>
 ```
 
-## CLI に渡す URL（コマンド実行のたびに手で打つ）
+## UTAGE の3つのURL
 
-`.env` には入れない。毎回コマンドラインに渡す:
+初回実行時に対話入力される。入力すると `.env` に自動保存され、2回目以降は自動的に使われる。事前に `.env` へ書いておいてもOK、CLI 引数で上書きすることも可能。
 
-| 引数 | 例 | 取り方 |
+| .env キー / CLI 引数 | 例 | 取り方 |
 |---|---|---|
-| `--login-url` | `https://utage-system.com/operator/XXX/login` | オペレーター管理画面から |
-| `--course-url` | `https://utage-system.com/site/SITE_ID/course/COURSE_ID` | 対象コースの編集画面 URL から `/lesson` より前の部分 |
-| `--upload-folder-url` | `https://utage-system.com/media/video/FOLDER_ID` | メディア管理の動画フォルダを開いた時のURL |
+| `UTAGE_LOGIN_URL` / `--login-url` | `https://utage-system.com/operator/XXX/login` | オペレーター管理画面から |
+| `UTAGE_COURSE_URL` / `--course-url` | `https://utage-system.com/site/SITE_ID/course/COURSE_ID` | 対象コースの編集画面 URL から `/lesson` より前の部分 |
+| `UTAGE_UPLOAD_FOLDER_URL` / `--upload-folder-url` | `https://utage-system.com/media/video/FOLDER_ID` | メディア管理の動画フォルダを開いた時のURL |
 
 ## 動作確認
 
