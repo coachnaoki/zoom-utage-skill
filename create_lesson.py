@@ -49,61 +49,71 @@ def _save_to_env(key, val):
     ENV_PATH.write_text(lines, encoding='utf-8')
     os.environ[key] = val
 
-def _prompt_key(key, doc_ref):
-    import getpass
+def _prompt_key(key, what, where_to_get, hidden=True):
+    """
+    what: 「これは何の値か」を1行で（例: 'Zoom Server-to-Server OAuth の Account ID'）
+    where_to_get: どの記事の何ステップで取れるか（例: 'X記事 STEP1'）
+    """
     val = os.environ.get(key, '')
     if val:
         return val
-    print(f'\n⚠️  {key} が未設定です。')
-    print(f'   取得手順 → {doc_ref}')
+    print('')
+    print('━' * 60)
+    print(f'  📝 {what} を入力してください')
+    print(f'     （参照: {where_to_get}）')
+    print('━' * 60)
     while True:
-        print(f'   [1] 今すぐ入力する')
-        print(f'   [2] 後で設定する（終了）')
-        ans = input('   選択 [1/2]: ').strip()
-        if ans == '2':
-            raise SystemExit(f'{doc_ref} を参照してAPIキーを取得してから再実行してください。')
-        if ans == '1':
-            val = getpass.getpass(f'   {key}= (入力は非表示) ').strip()
-            if not val:
-                print('   空です。もう一度入力してください。')
-                continue
-            _save_to_env(key, val)
-            print(f'   ✅ {key} を .env に保存しました')
-            return val
+        if hidden:
+            import getpass
+            val = getpass.getpass(f'  {key} = (入力は表示されません): ').strip()
+        else:
+            val = input(f'  {key} = ').strip()
+        if not val:
+            print('  ⚠️ 空です。もう一度入力してください。（中止する場合は Ctrl+C）')
+            continue
+        _save_to_env(key, val)
+        print(f'  ✅ {key} を .env に保存しました（次回からは自動で読み込まれます）')
+        return val
 
-def _prompt_url(key, label, example, doc_ref, cli_val=None):
+def _prompt_url(key, what, example, where_to_get, cli_val=None):
+    """
+    what: 「これは何のURLか」を1行で（例: 'UTAGE オペレーター画面のログインURL'）
+    """
     if cli_val:
         _save_to_env(key, cli_val)
         return cli_val
     val = os.environ.get(key, '')
     if val:
         return val
-    print(f'\n⚠️  {label} が未設定です。')
-    print(f'   例: {example}')
-    print(f'   取得手順 → {doc_ref}')
+    print('')
+    print('━' * 60)
+    print(f'  🔗 {what} を入力してください')
+    print(f'     例: {example}')
+    print(f'     （参照: {where_to_get}）')
+    print('━' * 60)
     while True:
-        val = input(f'   {label}: ').strip()
+        val = input(f'  URL: ').strip()
         if not val:
-            print('   空です。もう一度入力してください。')
+            print('  ⚠️ 空です。もう一度入力してください。（中止する場合は Ctrl+C）')
             continue
         if not val.startswith('http'):
-            print('   URL形式で入力してください（https://... で始まる）')
+            print('  ⚠️ URL形式で入力してください（https://... で始まる）')
             continue
         _save_to_env(key, val)
-        print(f'   ✅ {key} を .env に保存しました')
+        print(f'  ✅ {key} を .env に保存しました（次回からは自動で読み込まれます）')
         return val
 
 def setup_env(need_zoom=False):
     _load_env()
     global GEMINI_API_KEY, UTAGE_EMAIL, UTAGE_PASSWORD
     global ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET
-    GEMINI_API_KEY = _prompt_key('GEMINI_API_KEY', 'docs/02-gemini-api.md')
-    UTAGE_EMAIL = _prompt_key('UTAGE_EMAIL', 'docs/03-utage-operator.md')
-    UTAGE_PASSWORD = _prompt_key('UTAGE_PASSWORD', 'docs/03-utage-operator.md')
+    GEMINI_API_KEY = _prompt_key('GEMINI_API_KEY', 'Gemini API キー（タイトル・チャプター生成用）', 'X記事 STEP2')
+    UTAGE_EMAIL = _prompt_key('UTAGE_EMAIL', 'UTAGE オペレーターアカウントのメールアドレス', 'X記事 STEP3', hidden=False)
+    UTAGE_PASSWORD = _prompt_key('UTAGE_PASSWORD', 'UTAGE オペレーターアカウントのパスワード', 'X記事 STEP3')
     if need_zoom:
-        ZOOM_ACCOUNT_ID = _prompt_key('ZOOM_ACCOUNT_ID', 'docs/01-zoom-api.md')
-        ZOOM_CLIENT_ID = _prompt_key('ZOOM_CLIENT_ID', 'docs/01-zoom-api.md')
-        ZOOM_CLIENT_SECRET = _prompt_key('ZOOM_CLIENT_SECRET', 'docs/01-zoom-api.md')
+        ZOOM_ACCOUNT_ID = _prompt_key('ZOOM_ACCOUNT_ID', 'Zoom Server-to-Server OAuth の Account ID', 'X記事 STEP1')
+        ZOOM_CLIENT_ID = _prompt_key('ZOOM_CLIENT_ID', 'Zoom Server-to-Server OAuth の Client ID', 'X記事 STEP1')
+        ZOOM_CLIENT_SECRET = _prompt_key('ZOOM_CLIENT_SECRET', 'Zoom Server-to-Server OAuth の Client Secret', 'X記事 STEP1')
     else:
         ZOOM_ACCOUNT_ID = os.environ.get('ZOOM_ACCOUNT_ID', '')
         ZOOM_CLIENT_ID = os.environ.get('ZOOM_CLIENT_ID', '')
@@ -200,13 +210,13 @@ def gemini_call(prompt, max_tokens=2500, retries=4):
                 raise SystemExit(
                     'Gemini APIキーが無効です。\n'
                     '  → GEMINI_API_KEY を確認してください。\n'
-                    '  → 詳細: docs/02-gemini-api.md'
+                    '  → 詳細: X記事 STEP2（Gemini API）'
                 )
             if resp.status_code == 404:
                 raise SystemExit(
                     f'Geminiモデル "{GEMINI_MODEL}" が見つかりません。\n'
                     '  → モデル名が正しいか確認してください。\n'
-                    '  → 詳細: docs/02-gemini-api.md'
+                    '  → 詳細: X記事 STEP2（Gemini API）'
                 )
             resp.raise_for_status()
             break
@@ -308,7 +318,7 @@ def zoom_token():
         raise SystemExit(
             f'Zoom認証に失敗しました（{resp.status_code}）。\n'
             '  → ZOOM_ACCOUNT_ID / ZOOM_CLIENT_ID / ZOOM_CLIENT_SECRET を確認してください。\n'
-            '  → 詳細: docs/01-zoom-api.md'
+            '  → 詳細: X記事 STEP1（Zoom API）'
         )
     return resp.json()['access_token']
 
@@ -325,7 +335,7 @@ def zoom_list_recordings(token, days=7):
         raise SystemExit(
             f'Zoom録画一覧の取得に失敗しました（{resp.status_code}）。\n'
             '  → Scopesに cloud_recording:read:list_user_recordings:admin が追加されているか確認。\n'
-            '  → 詳細: docs/01-zoom-api.md'
+            '  → 詳細: X記事 STEP1（Zoom API）'
         )
     return resp.json().get('meetings', [])
 
@@ -396,7 +406,7 @@ def _login(ctx, login_url):
         raise SystemExit(
             f'UTAGEログインページに接続できません: {login_url}\n'
             '  → --login-url が正しいか確認してください。\n'
-            '  → 詳細: docs/03-utage-operator.md'
+            '  → 詳細: X記事 STEP3（UTAGE オペレーター）'
         )
     page.fill('input[name="email"]', UTAGE_EMAIL)
     page.fill('input[name="password"]', UTAGE_PASSWORD)
@@ -406,7 +416,7 @@ def _login(ctx, login_url):
         raise SystemExit(
             'UTAGEログインに失敗しました（メールアドレスまたはパスワードが違います）。\n'
             '  → UTAGE_EMAIL / UTAGE_PASSWORD を確認してください。\n'
-            '  → 詳細: docs/03-utage-operator.md'
+            '  → 詳細: X記事 STEP3（UTAGE オペレーター）'
         )
     return page
 
@@ -590,8 +600,8 @@ def build_rich_elements(lesson_id_int, contents_items, video_url, chapters_text,
                 f'font-size:15.5px;line-height:1.6;color:{INK};letter-spacing:0.02em;">'
                 f'<span style="flex:0 0 auto;min-width:78px;'
                 f'font-family:\'SF Mono\',Menlo,monospace;font-size:13px;font-weight:700;'
-                f'color:{ACCENT};padding:5px 10px;'
-                f'background:#ffffff;border:1.5px solid {ACCENT};'
+                f'color:{INK};padding:5px 10px;'
+                f'background:#ffffff;border:1.5px solid {INK};'
                 f'border-radius:4px;letter-spacing:0.02em;text-align:center;">{ts}</span>'
                 f'<span style="flex:1;">{body}</span>'
                 f'</div>'
@@ -729,17 +739,17 @@ def main():
     setup_env(need_zoom=args.zoom)
 
     args.login_url = _prompt_url(
-        'UTAGE_LOGIN_URL', 'UTAGE オペレーターログインURL',
+        'UTAGE_LOGIN_URL', 'UTAGE オペレーター画面のログインURL（オペレーター作成時のメールに記載）',
         'https://utage-system.com/operator/XXXXX/login',
-        'docs/03-utage-operator.md', args.login_url)
+        'X記事 STEP3', args.login_url)
     args.course_url = _prompt_url(
-        'UTAGE_COURSE_URL', '対象コースのURL',
+        'UTAGE_COURSE_URL', 'レッスンを追加する対象コースのURL（管理画面でコースを開いたときのURL）',
         'https://utage-system.com/site/SITE_ID/course/COURSE_ID',
-        'docs/03-utage-operator.md', args.course_url)
+        'X記事 STEP3', args.course_url)
     args.upload_folder_url = _prompt_url(
-        'UTAGE_UPLOAD_FOLDER_URL', '動画アップロード先フォルダURL',
+        'UTAGE_UPLOAD_FOLDER_URL', '動画アップロード先のメディアフォルダURL',
         'https://utage-system.com/media/video/FOLDER_ID',
-        'docs/03-utage-operator.md', args.upload_folder_url)
+        'X記事 STEP3', args.upload_folder_url)
 
     if args.slides_url is None:
         print('\n今回のレッスンで配布する資料URLを入力（なければEnter）:')
@@ -762,27 +772,48 @@ def main():
         token, cands = zoom_list_candidates(days=args.zoom_days)
         if not cands:
             raise SystemExit(f'直近{args.zoom_days}日にMP4+VTTが揃った録画なし')
-        if args.yes or len(cands) == 1:
-            info = {'token': token, **cands[0]}
-            print(f'    自動選択: {info["topic"]} ({info["start_time"]})')
+
+        WEEKDAYS = ['月', '火', '水', '木', '金', '土', '日']
+
+        def _fmt_entry(i, c):
+            try:
+                dt = datetime.fromisoformat(c['start_time'].replace('Z', '+00:00'))
+                dt_local = dt.astimezone()
+                wk = WEEKDAYS[dt_local.weekday()]
+                ts_label = dt_local.strftime(f'%m/%d({wk}) %H:%M')
+            except Exception:
+                ts_label = c['start_time']
+            return (f'  [{i}] {ts_label}  {c["topic"]}\n'
+                    f'       {c["duration"]}分 / {c["size_mb"]}MB')
+
+        print('')
+        print('━' * 60)
+        print(f'  📹 アップロードするZoom録画を選んでください（{len(cands)}件）')
+        print('━' * 60)
+        show_n = min(len(cands), 10)
+        for i, c in enumerate(cands[:show_n], 1):
+            print(_fmt_entry(i, c))
+        if len(cands) > 10:
+            print(f'  （残り{len(cands)-10}件は省略。--zoom-days で期間調整可）')
+        print('━' * 60)
+
+        if args.yes:
+            idx = 0
+            print(f'  --yes 指定のため [1] を自動選択')
         else:
-            print(f'    {len(cands)}件の録画が見つかりました:')
-            for i, c in enumerate(cands[:10], 1):
-                print(f'    [{i}] {c["start_time"]} / {c["topic"]} '
-                      f'({c["duration"]}分, {c["size_mb"]}MB)')
-            if len(cands) > 10:
-                print(f'    （残り{len(cands)-10}件は省略。--zoom-days で期間調整可）')
             while True:
-                ans = input(f'\n番号を入力 [1-{min(len(cands),10)}] (デフォルト: 1): ').strip()
+                ans = input(f'  番号を入力 [1-{show_n}] (Enter=1, q=中止): ').strip()
+                if ans.lower() == 'q':
+                    raise SystemExit('中止しました')
                 if ans == '':
                     idx = 0
                     break
-                if ans.isdigit() and 1 <= int(ans) <= min(len(cands), 10):
+                if ans.isdigit() and 1 <= int(ans) <= show_n:
                     idx = int(ans) - 1
                     break
-                print('    無効。もう一度入力してください')
-            info = {'token': token, **cands[idx]}
-            print(f'    選択: {info["topic"]}')
+                print('  ⚠️ 無効な番号です。もう一度入力してください')
+        info = {'token': token, **cands[idx]}
+        print(f'  ✅ 選択: {info["topic"]} ({info["start_time"]})')
         tmpdir_obj = tempfile.TemporaryDirectory(prefix='zoom_dl_')
         tmpdir = Path(tmpdir_obj.name)
         safe = re.sub(r'[\\/*?:"<>|]', '_', info['topic'])
