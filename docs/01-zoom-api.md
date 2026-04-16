@@ -18,16 +18,12 @@
 
 ### Scopes（権限）
 
-「Scopes」タブで以下を追加:
+「Scopes」タブで以下2つを追加:
 
-**必須（録画一覧取得・ダウンロード用）**
 - `cloud_recording:read:list_user_recordings:admin`（録画一覧を見る権限）
 - `cloud_recording:read:recording:admin`（録画を取得する権限）
 
-**予備（`me` 解決でエラーが出たら追加）**
-- `user:read:user:admin`（`/users/me` のユーザー解決用）
-
-ほとんどの Zoom アカウントは上の2つだけで動きます。もし実行時に `User does not exist: me` のようなエラーが出たら、3つ目を追加して Activate し直してください。
+この2つだけでOK。`/users/me/recordings` はトークン自体にアカウント情報が紐づくので、`user:*` 系の scope は不要です。
 
 ### Activation
 
@@ -61,6 +57,6 @@ print(r.status_code, r.json().get('access_token','')[:20]+'...')
 
 ## よくあるエラー
 
-- `4700 - Invalid access token`: Scopes が足りない。上の3つ全部を追加したか確認
+- `4700 - Invalid access token`: Scopes が足りない。上の2つを追加して Activate し直したか確認
 - `300 - App has not been activated`: Activation タブで Activate していない
 - 録画が取得できない: 録画の「完了」に時間がかかる。会議終了から30分〜数時間待つ
