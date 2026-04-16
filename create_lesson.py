@@ -899,8 +899,61 @@ def main():
         if resp.status_code != 200:
             print('保存失敗'); b.close(); return
 
-        print(f'\n完了: {edit_url.replace("/edit", "")}')
+        lesson_url = edit_url.replace('/edit', '')
+        print(f'\n完了: {lesson_url}')
         b.close()
+
+    _post_run_menu(lesson_url, edit_url, args)
+
+
+def _post_run_menu(lesson_url, edit_url, args):
+    """レッスン作成後のアクション選択メニュー"""
+    if args.yes:
+        return
+    print('')
+    print('━' * 60)
+    print(f'  ✅ レッスンページ作成完了')
+    print(f'     公開URL: {lesson_url}')
+    print(f'     編集URL: {edit_url}')
+    print('━' * 60)
+    print('  次は何をしますか？')
+    print('    [1] ブラウザで公開ページを開く')
+    print('    [2] ブラウザで編集画面を開く（タイトル・文言の微修正）')
+    print('    [3] 続けてもう1本、別のZoom録画でレッスンを作る')
+    print('    [4] デザインをカスタマイズする手順を表示（docs/04）')
+    print('    [5] 終了')
+    print('━' * 60)
+    while True:
+        ans = input('  番号を入力 [1-5] (Enter=5で終了): ').strip()
+        if ans in ('', '5'):
+            print('  お疲れさまでした。')
+            return
+        if ans == '1':
+            import webbrowser
+            webbrowser.open(lesson_url)
+            print(f'  🌐 ブラウザで {lesson_url} を開きました')
+            continue
+        if ans == '2':
+            import webbrowser
+            webbrowser.open(edit_url)
+            print(f'  🌐 ブラウザで {edit_url} を開きました')
+            continue
+        if ans == '3':
+            print('')
+            print('  以下のコマンドで続けてください:')
+            print('    .venv/bin/python create_lesson.py --zoom')
+            print('  （タスクをもう1本こなしたいなら、このシェルで↑を実行）')
+            return
+        if ans == '4':
+            print('')
+            print('  デザインをターゲット層に合わせて調整するには、Claude Code に以下を貼り付け:')
+            print('  ─────────────────────────────────────────────────')
+            print('  docs/04-customize-design.md を読んで、このスキルのターゲットは')
+            print('  〇〇（例: 40代の英語学習者）なので、create_lesson.py の')
+            print('  CUSTOMIZE セクションをそれに合わせて書き換えてください。')
+            print('  ─────────────────────────────────────────────────')
+            continue
+        print('  ⚠️ 無効な番号です（1-5 で入力）')
 
 
 if __name__ == '__main__':
