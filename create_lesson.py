@@ -40,6 +40,15 @@ def _load_env():
         print(f'.env.example → .env にコピーしました')
     load_dotenv(ENV_PATH)
 
+def _save_to_env(key, val):
+    lines = ENV_PATH.read_text(encoding='utf-8') if ENV_PATH.exists() else ''
+    if f'{key}=' in lines:
+        lines = re.sub(rf'^{key}=.*$', f'{key}={val}', lines, flags=re.MULTILINE)
+    else:
+        lines += f'\n{key}={val}\n'
+    ENV_PATH.write_text(lines, encoding='utf-8')
+    os.environ[key] = val
+
 def _prompt_key(key, doc_ref):
     import getpass
     val = os.environ.get(key, '')
@@ -58,16 +67,31 @@ def _prompt_key(key, doc_ref):
             if not val:
                 print('   空です。もう一度入力してください。')
                 continue
-            lines = ENV_PATH.read_text(encoding='utf-8') if ENV_PATH.exists() else ''
-            if f'{key}=' in lines:
-                import re
-                lines = re.sub(rf'^{key}=.*$', f'{key}={val}', lines, flags=re.MULTILINE)
-            else:
-                lines += f'\n{key}={val}\n'
-            ENV_PATH.write_text(lines, encoding='utf-8')
-            os.environ[key] = val
+            _save_to_env(key, val)
             print(f'   ✅ {key} を .env に保存しました')
             return val
+
+def _prompt_url(key, label, example, doc_ref, cli_val=None):
+    if cli_val:
+        _save_to_env(key, cli_val)
+        return cli_val
+    val = os.environ.get(key, '')
+    if val:
+        return val
+    print(f'\n⚠️  {label} が未設定です。')
+    print(f'   例: {example}')
+    print(f'   取得手順 → {doc_ref}')
+    while True:
+        val = input(f'   {label}: ').strip()
+        if not val:
+            print('   空です。もう一度入力してください。')
+            continue
+        if not val.startswith('http'):
+            print('   URL形式で入力してください（https://... で始まる）')
+            continue
+        _save_to_env(key, val)
+        print(f'   ✅ {key} を .env に保存しました')
+        return val
 
 def setup_env(need_zoom=False):
     _load_env()
@@ -651,9 +675,9 @@ def main():
     g.add_argument('--vtt', help='ローカルの .transcript.vtt パス')
     g.add_argument('--zoom', action='store_true', help='Zoom APIから直近の録画を取得')
     ap.add_argument('--zoom-days', type=int, default=7)
-    ap.add_argument('--login-url', required=True, help='UTAGE オペレーターログインURL')
-    ap.add_argument('--course-url', required=True, help='対象コースの URL')
-    ap.add_argument('--upload-folder-url', required=True, help='動画アップロード先フォルダの URL')
+    ap.add_argument('--login-url', default=None, help='UTAGE オペレーターログインURL（未指定時は .env または対話入力）')
+    ap.add_argument('--course-url', default=None, help='対象コースの URL（未指定時は .env または対話入力）')
+    ap.add_argument('--upload-folder-url', default=None, help='動画アップロード先フォルダの URL（未指定時は .env または対話入力）')
     ap.add_argument('--slides-url', default=None)
     ap.add_argument('--yes', action='store_true')
     ap.add_argument('--dry-run', action='store_true')
@@ -665,6 +689,19 @@ def main():
         raise SystemExit('--vtt または --zoom のどちらかを指定してください')
 
     setup_env(need_zoom=args.zoom)
+
+    args.login_url = _prompt_url(
+        'UTAGE_LOGIN_URL', 'UTAGE オペレーターログインURL',
+        'https://utage-system.com/operator/XXXXX/login',
+        'docs/03-utage-operator.md', args.login_url)
+    args.course_url = _prompt_url(
+        'UTAGE_COURSE_URL', '対象コースのURL',
+        'https://utage-system.com/site/SITE_ID/course/COURSE_ID',
+        'docs/03-utage-operator.md', args.course_url)
+    args.upload_folder_url = _prompt_url(
+        'UTAGE_UPLOAD_FOLDER_URL', '動画アップロード先フォルダURL',
+        'https://utage-system.com/media/video/FOLDER_ID',
+        'docs/03-utage-operator.md', args.upload_folder_url)
 
     base = f'{urlparse(args.login_url).scheme}://{urlparse(args.login_url).netloc}'
 

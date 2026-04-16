@@ -47,24 +47,21 @@ Claude Code に話しかける:
 
 ## 使う
 
+初回実行時、APIキー・UTAGEのログイン情報・3つのURL（login/course/upload-folder）は対話入力され、自動的に `.env` に保存される。2回目以降は引数なしでOK。
+
 Zoom API モード（直近の録画を自動取得）:
 
 ```bash
-.venv/bin/python create_lesson.py --zoom --yes \
-  --login-url "https://utage-system.com/operator/XXX/login" \
-  --course-url "https://utage-system.com/site/SITE_ID/course/COURSE_ID" \
-  --upload-folder-url "https://utage-system.com/media/video/FOLDER_ID"
+.venv/bin/python create_lesson.py --zoom --yes
 ```
 
 ローカル VTT モード（Zoom API を使わない）:
 
 ```bash
-.venv/bin/python create_lesson.py \
-  --vtt "/path/to/Recording.transcript.vtt" --yes \
-  --login-url "..." --course-url "..." --upload-folder-url "..."
+.venv/bin/python create_lesson.py --vtt "/path/to/Recording.transcript.vtt" --yes
 ```
 
-詳細は `SKILL.md` を参照。
+URLを都度変えたい場合は `--login-url` / `--course-url` / `--upload-folder-url` で上書き可能。詳細は `SKILL.md` を参照。
 
 ## リポジトリ構成
 
