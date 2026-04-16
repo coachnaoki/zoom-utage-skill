@@ -30,7 +30,62 @@ import requests
 from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright
 
-load_dotenv(Path(__file__).resolve().parent / '.env')
+ENV_PATH = Path(__file__).resolve().parent / '.env'
+ENV_EXAMPLE = Path(__file__).resolve().parent / '.env.example'
+
+def _load_env():
+    if not ENV_PATH.exists() and ENV_EXAMPLE.exists():
+        import shutil
+        shutil.copy(ENV_EXAMPLE, ENV_PATH)
+        print(f'.env.example → .env にコピーしました')
+    load_dotenv(ENV_PATH)
+
+def _prompt_key(key, doc_ref):
+    import getpass
+    val = os.environ.get(key, '')
+    if val:
+        return val
+    print(f'\n⚠️  {key} が未設定です。')
+    print(f'   取得手順 → {doc_ref}')
+    while True:
+        print(f'   [1] 今すぐ入力する')
+        print(f'   [2] 後で設定する（終了）')
+        ans = input('   選択 [1/2]: ').strip()
+        if ans == '2':
+            raise SystemExit(f'{doc_ref} を参照してAPIキーを取得してから再実行してください。')
+        if ans == '1':
+            val = getpass.getpass(f'   {key}= (入力は非表示) ').strip()
+            if not val:
+                print('   空です。もう一度入力してください。')
+                continue
+            lines = ENV_PATH.read_text(encoding='utf-8') if ENV_PATH.exists() else ''
+            if f'{key}=' in lines:
+                import re
+                lines = re.sub(rf'^{key}=.*$', f'{key}={val}', lines, flags=re.MULTILINE)
+            else:
+                lines += f'\n{key}={val}\n'
+            ENV_PATH.write_text(lines, encoding='utf-8')
+            os.environ[key] = val
+            print(f'   ✅ {key} を .env に保存しました')
+            return val
+
+def setup_env(need_zoom=False):
+    _load_env()
+    global GEMINI_API_KEY, UTAGE_EMAIL, UTAGE_PASSWORD
+    global ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET
+    GEMINI_API_KEY = _prompt_key('GEMINI_API_KEY', 'docs/02-gemini-api.md')
+    UTAGE_EMAIL = _prompt_key('UTAGE_EMAIL', 'docs/03-utage-operator.md')
+    UTAGE_PASSWORD = _prompt_key('UTAGE_PASSWORD', 'docs/03-utage-operator.md')
+    if need_zoom:
+        ZOOM_ACCOUNT_ID = _prompt_key('ZOOM_ACCOUNT_ID', 'docs/01-zoom-api.md')
+        ZOOM_CLIENT_ID = _prompt_key('ZOOM_CLIENT_ID', 'docs/01-zoom-api.md')
+        ZOOM_CLIENT_SECRET = _prompt_key('ZOOM_CLIENT_SECRET', 'docs/01-zoom-api.md')
+    else:
+        ZOOM_ACCOUNT_ID = os.environ.get('ZOOM_ACCOUNT_ID', '')
+        ZOOM_CLIENT_ID = os.environ.get('ZOOM_CLIENT_ID', '')
+        ZOOM_CLIENT_SECRET = os.environ.get('ZOOM_CLIENT_SECRET', '')
+
+_load_env()
 UTAGE_EMAIL = os.environ.get('UTAGE_EMAIL', '')
 UTAGE_PASSWORD = os.environ.get('UTAGE_PASSWORD', '')
 ZOOM_ACCOUNT_ID = os.environ.get('ZOOM_ACCOUNT_ID', '')
@@ -608,18 +663,14 @@ def main():
 
     if not (args.vtt or args.zoom):
         raise SystemExit('--vtt または --zoom のどちらかを指定してください')
-    if not GEMINI_API_KEY:
-        raise SystemExit('GEMINI_API_KEY が .env に未設定')
-    if not (UTAGE_EMAIL and UTAGE_PASSWORD):
-        raise SystemExit('UTAGE_EMAIL / UTAGE_PASSWORD が .env に未設定')
+
+    setup_env(need_zoom=args.zoom)
 
     base = f'{urlparse(args.login_url).scheme}://{urlparse(args.login_url).netloc}'
 
     tmpdir_obj = None
     if args.zoom:
         print(f'[0] Zoom APIから録画取得（直近{args.zoom_days}日）')
-        if not all([ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET]):
-            raise SystemExit('Zoom認証情報(.env)が未設定')
         token, cands = zoom_list_candidates(days=args.zoom_days)
         if not cands:
             raise SystemExit(f'直近{args.zoom_days}日にMP4+VTTが揃った録画なし')
