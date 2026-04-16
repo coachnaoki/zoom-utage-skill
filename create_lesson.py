@@ -703,6 +703,19 @@ def main():
         'https://utage-system.com/media/video/FOLDER_ID',
         'docs/03-utage-operator.md', args.upload_folder_url)
 
+    if args.slides_url is None:
+        print('\n今回のレッスンで配布する資料URLを入力（なければEnter）:')
+        print('  例: Google Slides や PDF の公開URL')
+        ans = input('  資料URL: ').strip()
+        if ans:
+            if not ans.startswith('http'):
+                print('  URL形式でないためスキップします')
+            else:
+                args.slides_url = ans
+                print(f'  ✅ 「資料を開く」ボタンを追加します')
+        else:
+            print('  資料ボタンなしで進めます')
+
     base = f'{urlparse(args.login_url).scheme}://{urlparse(args.login_url).netloc}'
 
     tmpdir_obj = None
