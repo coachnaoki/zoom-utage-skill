@@ -22,10 +22,10 @@
 オペレーター用のログインURLは以下の形式:
 
 ```
-https://your-site.com/operator/<RANDOM_HASH>/login
+https://utage-system.com/operator/<RANDOM_HASH>/login
 ```
 
-`<RANDOM_HASH>` 部分はサイトごとに固有。管理画面のオペレーター管理で確認できる。
+`<RANDOM_HASH>` 部分はサイトごとに固有。管理画面のオペレーター管理で確認できる。独自ドメインを設定している場合は `https://あなたのドメイン/operator/<RANDOM_HASH>/login` になる。
 
 ## `.env` に書く
 
@@ -40,9 +40,9 @@ UTAGE_PASSWORD=<オペレーターのパスワード>
 
 | 引数 | 例 | 取り方 |
 |---|---|---|
-| `--login-url` | `https://your-site.com/operator/XXX/login` | オペレーター管理画面から |
-| `--course-url` | `https://your-site.com/site/SITE_ID/course/COURSE_ID` | 対象コースの編集画面 URL から `/lesson` より前の部分 |
-| `--upload-folder-url` | `https://your-site.com/media/video/FOLDER_ID` | メディア管理の動画フォルダを開いた時のURL |
+| `--login-url` | `https://utage-system.com/operator/XXX/login` | オペレーター管理画面から |
+| `--course-url` | `https://utage-system.com/site/SITE_ID/course/COURSE_ID` | 対象コースの編集画面 URL から `/lesson` より前の部分 |
+| `--upload-folder-url` | `https://utage-system.com/media/video/FOLDER_ID` | メディア管理の動画フォルダを開いた時のURL |
 
 ## 動作確認
 
@@ -52,7 +52,7 @@ from playwright.sync_api import sync_playwright
 import os
 from dotenv import load_dotenv
 load_dotenv()
-LOGIN_URL='https://your-site.com/operator/XXX/login'  # ← 書き換える
+LOGIN_URL='https://utage-system.com/operator/XXX/login'  # ← 書き換える
 with sync_playwright() as p:
     b = p.chromium.launch(headless=True)
     pg = b.new_page()

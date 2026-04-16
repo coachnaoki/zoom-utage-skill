@@ -51,9 +51,9 @@ Zoom API モード（直近の録画を自動取得）:
 
 ```bash
 .venv/bin/python create_lesson.py --zoom --yes \
-  --login-url "https://your-site.com/operator/XXX/login" \
-  --course-url "https://your-site.com/site/SITE_ID/course/COURSE_ID" \
-  --upload-folder-url "https://your-site.com/media/video/FOLDER_ID"
+  --login-url "https://utage-system.com/operator/XXX/login" \
+  --course-url "https://utage-system.com/site/SITE_ID/course/COURSE_ID" \
+  --upload-folder-url "https://utage-system.com/media/video/FOLDER_ID"
 ```
 
 ローカル VTT モード（Zoom API を使わない）:

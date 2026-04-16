@@ -7,9 +7,9 @@ Zoom録画(VTT+MP4) → UTAGE会員サイトのレッスンページを自動作
   # .env に API 認証情報をセットしてから
   .venv/bin/python create_lesson.py \\
     --zoom \\
-    --login-url "https://your-site.com/operator/XXX/login" \\
-    --course-url "https://your-site.com/site/SITE_ID/course/COURSE_ID" \\
-    --upload-folder-url "https://your-site.com/media/video/FOLDER_ID" \\
+    --login-url "https://utage-system.com/operator/XXX/login" \\
+    --course-url "https://utage-system.com/site/SITE_ID/course/COURSE_ID" \\
+    --upload-folder-url "https://utage-system.com/media/video/FOLDER_ID" \\
     [--slides-url "..."] [--yes] [--dry-run]
 
   # Zoom API を使わず手元の VTT で試す場合
@@ -114,6 +114,18 @@ def gemini_call(prompt, max_tokens=2500, retries=4):
                 print(f'  Gemini {resp.status_code}, retry {wait}s ({attempt+1}/{retries})')
                 time.sleep(wait)
                 continue
+            if resp.status_code == 400 and 'API_KEY_INVALID' in resp.text:
+                raise SystemExit(
+                    'Gemini APIキーが無効です。\n'
+                    '  → GEMINI_API_KEY を確認してください。\n'
+                    '  → 詳細: docs/02-gemini-api.md'
+                )
+            if resp.status_code == 404:
+                raise SystemExit(
+                    f'Geminiモデル "{GEMINI_MODEL}" が見つかりません。\n'
+                    '  → モデル名が正しいか確認してください。\n'
+                    '  → 詳細: docs/02-gemini-api.md'
+                )
             resp.raise_for_status()
             break
         except requests.exceptions.RequestException as e:
@@ -210,7 +222,12 @@ def zoom_token():
         data={'grant_type': 'account_credentials', 'account_id': ZOOM_ACCOUNT_ID},
         auth=(ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET), timeout=10,
     )
-    resp.raise_for_status()
+    if not resp.ok:
+        raise SystemExit(
+            f'Zoom認証に失敗しました（{resp.status_code}）。\n'
+            '  → ZOOM_ACCOUNT_ID / ZOOM_CLIENT_ID / ZOOM_CLIENT_SECRET を確認してください。\n'
+            '  → 詳細: docs/01-zoom-api.md'
+        )
     return resp.json()['access_token']
 
 
@@ -222,7 +239,12 @@ def zoom_list_recordings(token, days=7):
         headers={'Authorization': f'Bearer {token}'},
         params={'from': from_date, 'to': to_date, 'page_size': 30}, timeout=10,
     )
-    resp.raise_for_status()
+    if not resp.ok:
+        raise SystemExit(
+            f'Zoom録画一覧の取得に失敗しました（{resp.status_code}）。\n'
+            '  → Scopesに cloud_recording:read:list_user_recordings:admin が追加されているか確認。\n'
+            '  → 詳細: docs/01-zoom-api.md'
+        )
     return resp.json().get('meetings', [])
 
 
@@ -286,11 +308,24 @@ def find_media(vtt_path):
 # ---------- UTAGE Playwright ----------
 def _login(ctx, login_url):
     page = ctx.new_page()
-    page.goto(login_url, wait_until='networkidle')
+    try:
+        page.goto(login_url, wait_until='networkidle', timeout=15000)
+    except Exception:
+        raise SystemExit(
+            f'UTAGEログインページに接続できません: {login_url}\n'
+            '  → --login-url が正しいか確認してください。\n'
+            '  → 詳細: docs/03-utage-operator.md'
+        )
     page.fill('input[name="email"]', UTAGE_EMAIL)
     page.fill('input[name="password"]', UTAGE_PASSWORD)
     page.click('button[type="submit"], input[type="submit"]')
     page.wait_for_load_state('networkidle')
+    if 'login' in page.url.lower():
+        raise SystemExit(
+            'UTAGEログインに失敗しました（メールアドレスまたはパスワードが違います）。\n'
+            '  → UTAGE_EMAIL / UTAGE_PASSWORD を確認してください。\n'
+            '  → 詳細: docs/03-utage-operator.md'
+        )
     return page
 
 
